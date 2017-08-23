@@ -422,7 +422,7 @@ class Order(SiteRelated):
     billing_detail_street = CharField(_("Street"), max_length=100)
 #    billing_detail_city = CharField(_("City/Suburb"), max_length=100)
 #    billing_detail_state = CharField(_("State/Region"), max_length=100)
-#    billing_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
+    billing_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
     billing_detail_country = CharField(_("Country"), max_length=100)
     billing_detail_phone = CharField(_("Phone"), max_length=20)
     billing_detail_email = models.EmailField(_("Email"), max_length=254)
@@ -434,7 +434,7 @@ class Order(SiteRelated):
 #    shipping_detail_postcode = CharField(_("Zip/Postcode"), max_length=10)
 #    shipping_detail_country = CharField(_("Country"), max_length=100)
 #    shipping_detail_phone = CharField(_("Phone"), max_length=20)
-    additional_instructions = models.TextField(_("Additional instructions"),
+    additional_instructions = models.TextField(_("Special Requirements"),
                                                blank=True)
     time = models.DateTimeField(_("Time"), auto_now_add=True, null=True)
     key = CharField(max_length=40, db_index=True)
