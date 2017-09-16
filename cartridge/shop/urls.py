@@ -9,11 +9,11 @@ from cartridge.shop import views
 _slash = "/" if settings.APPEND_SLASH else ""
 
 urlpatterns = [
-    url("^product/(?P<slug>.*)%s$" % _slash, views.product,
+    url("^option/(?P<slug>.*)%s$" % _slash, views.product,
         name="shop_product"),
     url("^wishlist%s$" % _slash, views.wishlist, name="shop_wishlist"),
-    url("^cart%s$" % _slash, views.cart, name="shop_cart"),
-    url("^checkout%s$" % _slash, views.checkout_steps, name="shop_checkout"),
+    url("^details%s$" % _slash, views.cart, name="shop_cart"),
+    url("^payment%s$" % _slash, views.checkout_steps, name="shop_checkout"),
     url("^checkout/complete%s$" % _slash, views.complete,
         name="shop_complete"),
     url("^invoice/(?P<order_id>\d+)%s$" % _slash, views.invoice,
