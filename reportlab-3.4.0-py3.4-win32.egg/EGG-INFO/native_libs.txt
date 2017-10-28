@@ -1,0 +1,2 @@
+reportlab/graphics/_renderPM.pyd
+reportlab/lib/_rl_accel.pyd
