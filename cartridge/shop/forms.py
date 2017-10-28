@@ -27,6 +27,7 @@ from cartridge.shop.utils import (make_choices, set_locale, set_shipping,
                                   clear_session)
 
 
+
 ADD_PRODUCT_ERRORS = {
     "invalid_options": _("The selected options are currently unavailable."),
     "no_stock": _("The selected options are currently not in stock."),
@@ -39,7 +40,16 @@ class AddProductForm(forms.Form):
     A form for adding the given product to the cart or the
     wishlist.
     """
-
+    arriving = forms.DateField(
+        label=_("Arriving"),
+        input_formats=settings.DATE_INPUT_FORMATS,
+        initial=date.today,
+        widget=forms.DateInput(attrs={'class':'jsdatepicker'}))
+    
+    departing = forms.DateField(
+        label=_("Departing"), initial=date.today,
+        widget=forms.DateInput(attrs={'class':'jsdatepicker'}))
+    
     quantity = forms.IntegerField(label=_("Quantity"), min_value=1)
     sku = forms.CharField(required=False, widget=forms.HiddenInput())
 
@@ -97,6 +107,9 @@ class AddProductForm(forms.Form):
         # a variation.
         data = self.cleaned_data.copy()
         quantity = data.pop("quantity")
+        arriving = data.pop("arriving")
+        departing = data.pop("departing")
+        
         # Ensure the product has a price if adding to cart.
         if self._to_cart:
             data["unit_price__isnull"] = False
@@ -305,17 +318,18 @@ class OrderForm(FormsetForm, DiscountForm):
         label=_("My delivery details are the same as my billing details"))
     remember = forms.BooleanField(required=False, initial=True,
         label=_("Remember my address for next time"))
-    card_name = forms.CharField(label=_("Cardholder name"))
-    card_type = forms.ChoiceField(label=_("Card type"),
-        widget=forms.RadioSelect,
-        choices=make_choices(settings.SHOP_CARD_TYPES))
-    card_number = forms.CharField(label=_("Card number"))
-    card_expiry_month = forms.ChoiceField(label=_("Card expiry month"),
-        initial="%02d" % date.today().month,
-        choices=make_choices(["%02d" % i for i in range(1, 13)]))
-    card_expiry_year = forms.ChoiceField(label=_("Card expiry year"))
-    card_ccv = forms.CharField(label=_("CCV"), help_text=_("A security code, "
-        "usually the last 3 digits found on the back of your card."))
+##    card_name = forms.CharField(label=_("Cardholder name"))
+##    card_type = forms.ChoiceField(label=_("Card type"),
+##        widget=forms.RadioSelect,
+##        choices=make_choices(settings.SHOP_CARD_TYPES))
+##    card_number = forms.CharField(label=_("Card number"))
+##    card_expiry_month = forms.ChoiceField(label=_("Card expiry month"),
+##        initial="%02d" % date.today().month,
+##        choices=make_choices(["%02d" % i for i in range(1, 13)]))
+##    card_expiry_year = forms.ChoiceField(label=_("Card expiry year"))
+##    card_ccv = forms.CharField(label=_("CCV"), help_text=_("A security code, "
+##        "usually the last 3 digits found on the back of your card."))
+    
 
     class Meta:
         model = Order
@@ -387,9 +401,9 @@ class OrderForm(FormsetForm, DiscountForm):
             self.fields[field].required = False
 
         # Set year choices for cc expiry, relative to the current year.
-        year = now().year
-        choices = make_choices(list(range(year, year + 21)))
-        self.fields["card_expiry_year"].choices = choices
+##        year = now().year
+##        choices = make_choices(list(range(year, year + 21)))
+##        self.fields["card_expiry_year"].choices = choices
 
     @classmethod
     def preprocess(cls, data):

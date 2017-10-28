@@ -32,6 +32,8 @@ from mezzanine.utils.models import AdminThumbMixin, upload_to
 from cartridge.shop import fields, managers
 from cartridge.shop.utils import clear_session
 
+from datetime import date
+
 
 class Priced(models.Model):
     """
@@ -47,6 +49,8 @@ class Priced(models.Model):
     sku = fields.SKUField(blank=True, null=True)
     num_in_stock = models.IntegerField(_("Number in stock"), blank=True,
                                        null=True)
+
+
 
     class Meta:
         abstract = True
@@ -124,6 +128,7 @@ class Product(BaseProduct, Priced, RichText, ContentTyped, AdminThumbMixin):
     admin_thumb_field = "image"
 
     search_fields = {"variations__sku": 100}
+
 
     class Meta:
         verbose_name = _("Product")
@@ -450,6 +455,9 @@ class Order(SiteRelated):
     transaction_id = CharField(_("Transaction ID"), max_length=255, null=True,
                                blank=True)
 
+    stripe_customer_id = CharField(_("Stripe customer id"), max_length=255, null=True,
+                               blank=True)
+
     status = models.IntegerField(_("Status"),
                             choices=settings.SHOP_ORDER_STATUS_CHOICES,
                             default=settings.SHOP_ORDER_STATUS_CHOICES[0][0])
@@ -459,7 +467,8 @@ class Order(SiteRelated):
     # These are fields that are stored in the session. They're copied to
     # the order in setup() and removed from the session in complete().
     session_fields = ("shipping_type", "shipping_total", "discount_total",
-                      "discount_code", "tax_type", "tax_total")
+                      "discount_code", "tax_type", "tax_total",
+                      "stripe_customer_id")
 
     class Meta:
         verbose_name = __("commercial meaning", "Order")
@@ -493,6 +502,7 @@ class Order(SiteRelated):
             self.total -= Decimal(self.discount_total)
         if self.tax_total is not None:
             self.total += Decimal(self.tax_total)
+
         self.save()  # We need an ID before we can add related items.
         for item in request.cart:
             product_fields = [f.name for f in SelectedProduct._meta.fields]
@@ -564,7 +574,7 @@ class Cart(models.Model):
             self._cached_items = self.items.all()
         return iter(self._cached_items)
 
-    def add_item(self, variation, quantity):
+    def add_item(self, variation, quantity, arriving, departing):
         """
         Increase quantity of existing item if SKU matches, otherwise create
         new.
@@ -577,6 +587,8 @@ class Cart(models.Model):
             item.description = force_text(variation)
             item.unit_price = variation.price()
             item.url = variation.product.get_absolute_url()
+            item.arriving = arriving
+            item.departing = departing
             image = variation.image
             if image is not None:
                 item.image = force_text(image.file)
@@ -654,6 +666,8 @@ class SelectedProduct(models.Model):
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
 
+
+
     class Meta:
         abstract = True
 
@@ -678,6 +692,9 @@ class CartItem(SelectedProduct):
     cart = models.ForeignKey("Cart", related_name="items")
     url = CharField(max_length=2000)
     image = CharField(max_length=200, null=True)
+
+    arriving = models.DateField(default=date.today)
+    departing = models.DateField(default=date.today)
 
     def get_absolute_url(self):
         return self.url

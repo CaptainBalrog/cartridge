@@ -20,32 +20,28 @@ except AttributeError:
                                "in your settings module to use the "
                                "stripe payment processor.")
 
+class Process():
 
-def process(request, order_form, order):
-    """
-    Payment handler for the stripe API.
-    """
-    data = {
-        "amount": int((order.total * 100).to_integral()),
-        "currency": getattr(settings, "STRIPE_CURRENCY", "gbp"),
-        "description": "Elaghvale booking payment",
-        "source": request.POST['stripeToken'],
-##        "card": {
-##            'number': request.POST["card_number"].strip(),
-##            'exp_month': request.POST["card_expiry_month"].strip(),
-##            'exp_year': request.POST["card_expiry_year"][2:].strip(),
-##            'cvc': request.POST["card_ccv"].strip(),
-##            'address_line1': request.POST['billing_detail_street'],
-##            'address_city': request.POST['billing_detail_city'],
-##            'address_state': request.POST['billing_detail_state'],
-##            'address_zip': request.POST['billing_detail_postcode'],
-##            'country': request.POST['billing_detail_country'],
-##        },
-    }
-    try:
-        response = stripe.Charge.create(**data)
-    except stripe.CardError:
-        raise CheckoutError(_("Transaction declined"))
-    except Exception as e:
-        raise CheckoutError(_("A general error occured: ") + str(e))
-    return response.id
+    def create_customer(request):
+        try:
+            customer = stripe.Customer.create(
+                description="Customer for david.martin@example.com",
+                source=request.POST['stripe_token'])
+        except Exception as e:
+            raise CheckoutError(_("A general error occured: ") + str(e))
+        return customer.id
+    
+    def take_payment(order):
+        """
+        Payment handler for the stripe API.
+        """
+        try:
+            response = stripe.Charge.create(
+                amount=int((order.total * 100).to_integral()),
+                currency=getattr(settings, "STRIPE_CURRENCY", "gbp"),
+                customer=order.stripe_customer_id,)
+        except stripe.CardError:
+            raise CheckoutError(_("Transaction declined"))
+        except Exception as e:
+            raise CheckoutError(_("A general error occured: ") + str(e))
+        return response.id

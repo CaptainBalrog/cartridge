@@ -65,7 +65,9 @@ def product(request, slug, template="shop/product.html",
         if add_product_form.is_valid():
             if to_cart:
                 quantity = add_product_form.cleaned_data["quantity"]
-                request.cart.add_item(add_product_form.variation, quantity)
+                arriving = add_product_form.cleaned_data["arriving"]
+                departing = add_product_form.cleaned_data["departing"]
+                request.cart.add_item(add_product_form.variation, quantity, arriving, departing)
                 recalculate_cart(request)
                 info(request, _("Item added to cart"))
                 return redirect("shop_cart")
@@ -255,9 +257,9 @@ def checkout_steps(request, form_class=OrderForm, extra_context=None):
             # process, but remove sensitive fields from the session
             # such as the credit card fields so that they're never
             # stored anywhere.
+
             request.session["order"] = dict(form.cleaned_data)
-            sensitive_card_fields = ("card_number", "card_expiry_month",
-                                     "card_expiry_year", "card_ccv")
+            sensitive_card_fields = ("stripe_token")
             for field in sensitive_card_fields:
                 if field in request.session["order"]:
                     del request.session["order"][field]
@@ -278,6 +280,20 @@ def checkout_steps(request, form_class=OrderForm, extra_context=None):
             except checkout.CheckoutError as e:
                 checkout_errors.append(e)
 
+            # get stripe customer id for order
+            if step == checkout.CHECKOUT_STEP_PAYMENT and not checkout_errors:
+                # Try create customer.
+                try:
+                    customer_id = payment_handler.create_customer(request)
+                    request.session["stripe_customer_id"] = customer_id
+
+                except checkout.CheckoutError as e:
+                    # Error in payment handler.
+                    #order.delete()
+                    checkout_errors.append(e)
+                    if settings.SHOP_CHECKOUT_STEPS_CONFIRMATION:
+                        step -= 1
+                
             # FINAL CHECKOUT STEP - run payment handler and process order.
             if step == checkout.CHECKOUT_STEP_LAST and not checkout_errors:
                 # Create and save the initial order object so that
@@ -289,7 +305,7 @@ def checkout_steps(request, form_class=OrderForm, extra_context=None):
                 order.setup(request)
                 # Try payment.
                 try:
-                    transaction_id = payment_handler(request, form, order)
+                    transaction_id = payment_handler.take_payment(order)
                 except checkout.CheckoutError as e:
                     # Error in payment handler.
                     order.delete()
@@ -340,7 +356,8 @@ def checkout_steps(request, form_class=OrderForm, extra_context=None):
                "CHECKOUT_STEP_PAYMENT": (settings.SHOP_PAYMENT_STEP_ENABLED and
                    step == checkout.CHECKOUT_STEP_PAYMENT),
                "step_title": step_vars["title"], "step_url": step_vars["url"],
-               "steps": checkout.CHECKOUT_STEPS, "step": step, "form": form}
+               "steps": checkout.CHECKOUT_STEPS, "step": step, "form": form,
+               "STRIPE_PUB_KEY": settings.STRIPE_PUB_KEY}
     context.update(extra_context or {})
     return TemplateResponse(request, template, context)
 

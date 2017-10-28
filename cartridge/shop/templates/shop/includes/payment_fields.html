@@ -1,14 +1,38 @@
 {% load i18n mezzanine_tags %}
 <fieldset>
     <legend>{% trans "Payment Details" %}</legend>
-    {% fields_for form.card_name_field %}
-    {% fields_for form.card_type_field %}
-    {% with form.card_expiry_fields as card_expiry_fields %}
-    <div class="form-group card-expiry-fields{% if card_expiry_fields.errors.card_expiry_year %} error{% endif %}">
-        <label class="control-label">{% trans "Card Expiry" %}</label>
-        {% fields_for card_expiry_fields %}
-    </div>
-    <div class="clearfix"></div>
-    {% endwith %}
-    {% fields_for form.card_fields %}
+      <div>
+        <label for="card-number">
+          Card Number
+        </label>     
+        <div id="card-number">
+        <!-- a Stripe Element will be inserted here. -->
+        </div>  
+            
+        <label for="card-expiry">
+          Expiration Date
+        </label>     
+        <div id="card-expiry">
+        <!-- a Stripe Element will be inserted here. -->
+        </div>      
+        
+        <label for="card-cvc">
+          CVC
+        </label>     
+        <div id="card-cvc">
+        <!-- a Stripe Element will be inserted here. -->
+        </div>  
+         
+         <label for="card-postalCode">
+          Postal Code
+        </label>     
+        <div id="card-postalCode">
+        <!-- a Stripe Element will be inserted here. -->
+        </div>  
+        
+       
+      </div>
+
 </fieldset>
+
+<div id="card-errors" role="alert"></div>

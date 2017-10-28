@@ -24,10 +24,10 @@
     <thead>
     <tr>
         <th colspan="2" class="left">{% trans "Item" %}</th>
-      <!--  <th>{% trans "Unit Price" %}</th> -->
+       <th>{% trans "Unit Price" %}</th>
         <th>{% trans "Arriving" %}</th>
         <th>{% trans "Departing" %}</th>
-<!--        <th class="center">{% trans "Qty" %}</th>-->
+       <th class="center">{% trans "Qty" %}</th>
         <th>{% trans "Price" %}</th>
         <th class="center">{% trans "Remove?" %}</th>
     </tr>
@@ -47,10 +47,10 @@
         <td class="left">
             <a href="{{ item.get_absolute_url }}">{{ item.description }}</a>
         </td>
-        <!--<td>{{ item.unit_price|currency }}</td> -->
-        <td>TBA</td>
-        <td>TBA</td>
-<!--        <td class="quantity">{{ form.quantity }}</td>-->
+        <td>{{ item.unit_price|currency }}</td>
+        <td>{{ item.arriving }}</td>
+        <td>{{ item.departing }}</td>
+        <td class="quantity">{{ form.quantity }}</td>
         <td>{{ item.total_price|currency }}</td>
         <td class="center">{{ form.DELETE }}</td>
     </tr>
