@@ -452,11 +452,14 @@ class Order(SiteRelated):
     discount_code = fields.DiscountCodeField(_("Discount code"), blank=True)
     discount_total = fields.MoneyField(_("Discount total"))
     total = fields.MoneyField(_("Order total"))
+
+    
     transaction_id = CharField(_("Transaction ID"), max_length=255, null=True,
                                blank=True)
 
     stripe_customer_id = CharField(_("Stripe customer id"), max_length=255, null=True,
                                blank=True)
+    
 
     status = models.IntegerField(_("Status"),
                             choices=settings.SHOP_ORDER_STATUS_CHOICES,
@@ -665,7 +668,9 @@ class SelectedProduct(models.Model):
     quantity = models.IntegerField(_("Quantity"), default=0)
     unit_price = fields.MoneyField(_("Unit price"), default=Decimal("0"))
     total_price = fields.MoneyField(_("Total price"), default=Decimal("0"))
-
+    arriving = models.DateTimeField(_("Arriving"), null=True)
+    departing = models.DateTimeField(_("Departing"), null=True)
+    
 
 
     class Meta:
